@@ -2,6 +2,7 @@ const JSONdb = require("simple-json-db")
 
 const express = require('express')
 const path = require('path');
+const cors = require('cors')
 const watchingdb = new JSONdb(path.join(__dirname, "../data/watching.json"))
 const settingsdb = new JSONdb(path.join(__dirname, '../data/settings.json'))
 
@@ -16,6 +17,8 @@ function initWebserver() {
     const app = express();
 
     app.use(express.json())
+    app.use(cors())
+    app.options('*', cors())
 
     app.post('/register', async (req, resp) => {
         try {

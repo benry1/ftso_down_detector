@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { syncBuiltinESMExports } from "module";
+import { sendTextAlert, sendEmailAlert } from "./alerts/alerts"
 
 // const ethers = require('ethers');
 require('dotenv').config();
@@ -7,17 +7,15 @@ const abi = require('./abi/abi.ts')
 const JSONdb = require('simple-json-db')
 
 //TODO: Make this extendible (add your own rpc)
-const url1 : string = "http://18.220.145.160:9650/ext/bc/C/rpc"
-const url2  = "http://3.132.128.10:9650/ext/bc/C/rpc"
-const rpc1 = new ethers.providers.JsonRpcProvider(url1);
-const rpc2 = new ethers.providers.JsonRpcProvider(url2);
+const url  = "http://" + process.env.rpcIp + ":9650/ext/bc/C/rpc"
+const rpc = new ethers.providers.JsonRpcProvider(url);
 
 const PriceSubmitterAddress = "0x1000000000000000000000000000000000000003";
 const VoterWhitelisterAddress = "0xa76906EfBA6dFAe155FfC4c0eb36cDF0A28ae24D";
 
-const watching = new JSONdb('./data/watching.json')
-const settings = new JSONdb('./data/settings.json')
-const history  = new JSONdb('./data/history.json')
+var watching = new JSONdb('./data/watching.json')
+var settings = new JSONdb('./data/settings.json')
+var history  = new JSONdb('./data/history.json')
 
 var watchAddresses : string[] = watching.get("addresses");
 
@@ -26,16 +24,18 @@ var epochProcessingComplete : boolean = true;
 var lastEventTimestamp : number = Date.now();
 
 function alertTo(address: string, missed: number) {
-    console.log("Mock alert to ", address);
-    console.log(settings.get(address));
-    console.log("Missed epochs: ", missed);
+    var message = "Detected " + missed + " missed epochs on address " + address + ". Check your provider at your convenience. Thanks!"
+    var phone = settings.get(address)['phone']
+    var email = settings.get(address)['email']
+    if (phone != "") { sendTextAlert(message, phone) }
+    if (email != "") { sendEmailAlert(message, email) }
 }
 
 async function detect() {
     //Setup
     console.log("Initializing...")
     console.log("Watching addresses ", watchAddresses)
-    var priceSubmitterContract = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc1);
+    var priceSubmitterContract = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc);
 
     console.log("Listening for submits and reveals...")
     priceSubmitterContract.on(priceSubmitterContract.filters.PriceHashesSubmitted(), (submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) => {
@@ -87,7 +87,11 @@ async function detect() {
             console.log("Processed last epoch!")
             epochProcessingComplete = true;
 
-            //TODO: Update watchlist
+            //Update watchlist
+            watching = new JSONdb("./data/watching.json")
+            watchAddresses = watching.get("addresses");
+            console.log(watchAddresses)
+
             //TODO: Health check RPCs
         }
 

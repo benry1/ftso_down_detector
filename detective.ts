@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { sendTextAlert, sendEmailAlert } from "./alerts/alerts"
+import { sendTextAlert, sendEmailAlert, doRestart } from "./alerts/alerts"
 
 // const ethers = require('ethers');
 require('dotenv').config();
@@ -27,8 +27,10 @@ function alertTo(address: string, missed: number) {
     var message = "Detected " + missed + " missed epochs on address " + address + ". Check your provider at your convenience. Thanks!"
     var phone = settings.get(address)['phone']
     var email = settings.get(address)['email']
+    var retry = settings.get(address)['restart']
     if (phone != "") { sendTextAlert(message, phone) }
     if (email != "") { sendEmailAlert(message, email) }
+    if (typeof retry !== "undefined" && retry !== "") { doRestart() }
 }
 
 async function detect() {

@@ -1,3 +1,4 @@
+import { exec, ExecException } from "child_process";
 
 require('dotenv').config();
 const twilio = require('twilio');
@@ -30,4 +31,10 @@ export async function sendEmailAlert(message: string, email:string) {
 			console.log("Sent alert email to ", email)
 		}
 	})
+}
+
+export function doRestart() {
+	console.log("Restarting provider...")
+	var x = exec("pm2 restart provider")
+	console.log("Result: " + x)
 }

@@ -1,6 +1,4 @@
 import { ethers } from "ethers";
-import { hasOnlyExpressionInitializer } from "typescript";
-import { sendTextAlert, sendEmailAlert, doRestart } from "./alerts/alerts"
 import { doCheckSubmits } from "./detective";
 
 // const ethers = require('ethers');

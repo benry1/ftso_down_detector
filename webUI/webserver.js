@@ -57,3 +57,7 @@ function setOrUpdateAddressSettings(address, alertAfter, email, phone, pass) {
 }
 
 initWebserver()
+
+
+//TODO: Should support:
+//   - Opt-out of messages

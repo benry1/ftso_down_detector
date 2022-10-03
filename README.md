@@ -1,3 +1,8 @@
-detective.ts is the main detection file. It waits for Reveal events to stop, then checks all addresses in the "watching.json" db for consecutive misses
+This project contains two apps
 
-webserver/webserver.js lets users register themselves and update their own info
+## Detective
+- A daemon script that continuously monitors FTSO price submissions and reveals
+- Will send alerts based on settings chosen by the provider
+
+## WebUI
+- A (very) simple UI, where providers can opt in to alerts and update their preferences

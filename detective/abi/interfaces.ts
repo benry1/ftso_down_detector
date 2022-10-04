@@ -112,7 +112,8 @@ export interface NodeSettings extends WithId<Document> {
     port: string
     health: string,
     minPeers: number,
-    maxAlerts: number
+    maxAlerts: number,
+    password: string
 }
 
 export interface ProviderSettings extends WithId<Document> {
@@ -120,9 +121,8 @@ export interface ProviderSettings extends WithId<Document> {
     alertAfter: number,
     maxAlerts: number,
     email: string,
-    telegram: string,
-    slack: string,
     phone: string,
+    password: string
 
 }
 

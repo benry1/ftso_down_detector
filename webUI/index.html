@@ -96,7 +96,7 @@
             const data = new FormData(event.target);
             const value = Object.fromEntries(data.entries());
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "http://localhost:3000/register", true);
+            xhr.open("POST", "http://localhost:3000/registerProvider", true);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                 alert(xhr.response)

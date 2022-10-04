@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "webdev": "nodemon ./webUI/webserver.js",
     "webUI": "node ./webUI/webserver.js",
     "detect": "npx ts-node ./detective/main.ts"
   },

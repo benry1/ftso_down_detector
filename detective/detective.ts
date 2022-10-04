@@ -1,7 +1,6 @@
 import { providers } from "ethers"
 import { NodeHealth, NodeSettings, ProviderHistory, ProviderSettings, Result, RPCHealthResponse } from "./abi/interfaces"
 import { sendEmailAlert } from "./alerts/email"
-import { sendTelegramAlert } from "./alerts/telegram"
 import { sendTextAlert } from "./alerts/text"
 import { mongo } from "./utils/global"
 
@@ -92,15 +91,13 @@ async function alertNodeHealth(health: NodeHealth, settings: NodeSettings) {
     var isHealthy : string = health.healthy ? "Healthy" : "Unhealthy"
     var message = health.ip + " was found to be " + isHealthy + " and is connected to " + health.peers + " peers (your set minimum is " + settings.minPeers + ")"
     if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
-    if (settings.email != "")    { sendEmailAlert(message, settings.email) }
-    if (settings.telegram != "") { sendTelegramAlert(message, settings.telegram) }
+    if (settings.email != "")    { sendEmailAlert(message, "Flare Node Alert", settings.email) }
     console.log(message)
 }
 
 function alertMissedSubmitsTo(settings: ProviderSettings, missed: number) {
     var message = "Detected " + missed + " missed epochs on address " + settings.address + ". Check your provider at your convenience."
     if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
-    if (settings.email != "")    { sendEmailAlert(message, settings.email) }
-    if (settings.telegram != "") { sendTelegramAlert(message, settings.telegram) }
+    if (settings.email != "")    { sendEmailAlert(message, "FTSO Provider Alert", settings.email) }
     console.log(message)
 }

@@ -57,12 +57,23 @@ export async function doCheckSubmits(watchAddresses : ProviderSettings[], latest
 export async function doCheckRPCHealth(watchIPs : NodeSettings[], epoch: number) {
     await Promise.allSettled(watchIPs.map(ip => {
         fetch(`http://${ip.ip}:${ip.port}${ip.health}`)
-            .then((val : any) => { if (val.status !== 200) { alertNodeUnreachable(ip, val); } else { return val };})
+            .then((val : any) => {
+                 if (val.status !== 200) {
+                     new Error(`Invalid Status Code ${val.status}`)
+                } else { return val };})
             .then((val : any) => val.text())
             .then((val : string) => JSON.parse(val))
-            .then((val: Result) => verifyRPCSettings(ip, val))
+            .then((val: Result) => verifyRPCSettings(ip, val, epoch))
             .then((val: NodeHealth) => mongo.updateNodeHealth(epoch, val))
-            .catch((e : Error) => console.log("Error checking rpc health: ", e))
+            .catch((e : Error) => {
+                alertNodeHealth(ip, "Health check on Songbird node " + ip.ip + " failed: " + e.message, epoch)
+                var health = {
+                    ip:ip.ip,
+                    healthy: false,
+                    peers: 0
+                }
+                mongo.updateNodeHealth(epoch, <NodeHealth>health)
+            })
     }))
 }
 
@@ -72,26 +83,46 @@ export async function doCheckRPCHealth(watchIPs : NodeSettings[], epoch: number)
  * 
  */
 
-function verifyRPCSettings(settings: NodeSettings, response: Result) : NodeHealth {
+function verifyRPCSettings(settings: NodeSettings, response: Result, epoch: number) : NodeHealth {
     var isHealthy : boolean = response.healthy
     var peers : number = response.checks.network.message.connectedPeers
     if (!isHealthy || peers < settings.minPeers) {
-        alertNodeHealth(<NodeHealth>{ip: settings.ip, healthy: isHealthy, peers: peers}, settings)
+        var message = settings.ip + " was found to be " + isHealthy + " and is connected to " + peers + " peers (your set minimum is " + settings.minPeers + ")"
+        alertNodeHealth(settings, message, epoch)
     }
     console.log(settings.ip, isHealthy, peers, settings.minPeers)
     return <NodeHealth>{ip: settings.ip, healthy: isHealthy, peers: peers}
 }
 
-async function alertNodeUnreachable(ip: NodeSettings, val : any) {
-    //TODO: Implement
-    console.log("Got a status code ", val.status, " from IP ", ip, ": ", await val.text())
+async function isEligibleForAlert(settings: NodeSettings, epoch: number) : Promise<boolean> {
+    var history : NodeHealth[] = await mongo.getNodeHealthHistory(epoch, settings.ip, 10)
+    var consecutive = 0;
+    for (var health of history) {
+        if (settings.ip.includes("99.99")) {console.log(health)}
+        if (health.healthy == false || health.peers < settings.minPeers) {
+            consecutive++
+        } else {
+            break;
+        }
+    }
+    return consecutive < settings.maxAlerts
 }
 
-async function alertNodeHealth(health: NodeHealth, settings: NodeSettings) {
-    var isHealthy : string = health.healthy ? "Healthy" : "Unhealthy"
-    var message = health.ip + " was found to be " + isHealthy + " and is connected to " + health.peers + " peers (your set minimum is " + settings.minPeers + ")"
-    if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
-    if (settings.email != "")    { sendEmailAlert(message, "Flare Node Alert", settings.email) }
+
+
+/*
+ *
+ *  Alert Functions
+ * 
+ */
+
+async function alertNodeHealth(settings: NodeSettings, message: string, epoch: number) {
+    if (await isEligibleForAlert(settings, epoch)) {
+        if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
+        if (settings.email != "")    { sendEmailAlert(message, "Songbird Node Alert", settings.email) }
+    } else {
+        
+    }
     console.log(message)
 }
 

@@ -76,7 +76,6 @@ export class Mongo {
     }
 
     async updateNodeHealth(epochNumber: number, health: NodeHealth) {
-        console.log("Putting node health..")
         try {
             await this.nodeHistory.insertOne({epoch: epochNumber, ip: health.ip, healthy: health.healthy, peers: health.peers})
         } catch (e) {
@@ -87,14 +86,14 @@ export class Mongo {
     async getNodeHealthHistory(epochNumber: number, ip: string, numEpochs: number) : Promise<NodeHealth[]> {
         var healths : NodeHealth[] = Array()
         try {
-            for (var i = 0; i < numEpochs; epochNumber--) {
-                var thisEpochHealth = await this.nodeHistory.findOne({epoch: epochNumber, ip: ip}) as NodeHealth
-                if (thisEpochHealth !== undefined) {
+            for (var i = 0; i < numEpochs; i++) {
+                var thisEpochHealth = (await this.nodeHistory.findOne({epoch: epochNumber - 1, ip: ip})) as NodeHealth
+                if (thisEpochHealth !== null && thisEpochHealth !== undefined) {
                     healths.push(thisEpochHealth)
                 }
             }
         } catch (e) {
-            console.error("[MONGODB] Failed to write node health: ", e)
+            console.error("[MONGODB] Failed to read node health: ", e)
         }
         return healths;
     }

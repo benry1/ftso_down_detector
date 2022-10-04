@@ -72,8 +72,10 @@ async function initialize() {
     setMongo(new Mongo(process.env.mongoURI!))
     await mongo.initialize()
     watchAddresses = await mongo.getWatchAddresses();
+    watchNodes     = await mongo.getWatchNodes();
     
     console.log("Watching addresses ", watchAddresses.map(settings => settings.address))
+    console.log("Wathing Nodes", watchNodes.map(settings => settings.ip))
     //Creating a listener on two RPCs for parity
     //If at least one sees the submit, it went through
     var priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc1);

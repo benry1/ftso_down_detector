@@ -85,9 +85,10 @@ export async function doCheckRPCHealth(watchIPs : NodeSettings[], epoch: number)
 
 function verifyRPCSettings(settings: NodeSettings, response: Result, epoch: number) : NodeHealth {
     var isHealthy : boolean = response.healthy
+    var healthy : string = isHealthy ? "Healthy" : "Unhealthy"
     var peers : number = response.checks.network.message.connectedPeers
     if (!isHealthy || peers < settings.minPeers) {
-        var message = settings.ip + " was found to be " + isHealthy + " and is connected to " + peers + " peers (your set minimum is " + settings.minPeers + ")"
+        var message = settings.ip + " was found to be " + healthy + " and is connected to " + peers + " peers (your set minimum is " + settings.minPeers + ")"
         alertNodeHealth(settings, message, epoch)
     }
     console.log(settings.ip, isHealthy, peers, settings.minPeers)
@@ -98,7 +99,6 @@ async function isEligibleForAlert(settings: NodeSettings, epoch: number) : Promi
     var history : NodeHealth[] = await mongo.getNodeHealthHistory(epoch, settings.ip, 10)
     var consecutive = 0;
     for (var health of history) {
-        if (settings.ip.includes("99.99")) {console.log(health)}
         if (health.healthy == false || health.peers < settings.minPeers) {
             consecutive++
         } else {
@@ -126,9 +126,9 @@ async function alertNodeHealth(settings: NodeSettings, message: string, epoch: n
     console.log(message)
 }
 
-function alertMissedSubmitsTo(settings: ProviderSettings, missed: number) {
+async function alertMissedSubmitsTo(settings: ProviderSettings, missed: number) {
     var message = "Detected " + missed + " missed epochs on address " + settings.address + ". Check your provider at your convenience."
-    if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
+    if (settings.phone != "")    { await sendTextAlert(message, settings.phone) }
     if (settings.email != "")    { sendEmailAlert(message, "FTSO Provider Alert", settings.email) }
     console.log(message)
 }

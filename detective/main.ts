@@ -83,9 +83,9 @@ async function initialize() {
 
     console.log("Listening for submits and reveals...")
     priceSubmitterContract1.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted)
-    priceSubmitterContract2.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted)
+    priceSubmitterContract2.on(priceSubmitterContract2.filters.PriceHashesSubmitted(), handleHashSubmitted)
     priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed)
-    priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed)
+    priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed)
 }
 
 function handleHashSubmitted(submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) {

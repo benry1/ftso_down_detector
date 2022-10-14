@@ -19,6 +19,8 @@ const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 const TOKEN_PATH = path.join(process.cwd(), 'detective/tokens/token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'detective/tokens/credentials.json');
 
+var lastTokenRefreshTime = 0;
+
 /**
  * Reads previously authorized credentials from the save file.
  *
@@ -58,11 +60,7 @@ async function saveCredentials(client) {
  *
  */
 async function authorize() {
-  let client = await loadSavedCredentialsIfExist();
-  if (client) {
-    return client;
-  }
-  client = await authenticate({
+  let client = await authenticate({
     scopes: SCOPES,
     keyfilePath: CREDENTIALS_PATH,
   });
@@ -76,7 +74,7 @@ async function authorize() {
 /*
  *
  *      End of authorization code.
- *      I believe you only have to run tha tonce, to get a valid token.
+ *      I believe you only have to run that once, to get a valid token.
  * 
  */ 
 
@@ -86,7 +84,11 @@ const { client_secret, client_id, redirect_uris } = credentials.installed;
 
 const fs = require('fs').promises;
 
-const getGmailService = () => {
+const getGmailService = async () => {
+  if (Date.now() - lastTokenRefreshTime > 60 * 60 * 1000) {
+    lastTokenRefreshTime = Date.now();
+    await authorize();
+  }
   const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
   oAuth2Client.setCredentials(tokens);
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
@@ -105,7 +107,7 @@ const createMail = async (options) => {
 };
 
 async function sendMail(options) {
-  const gmail = getGmailService();
+  const gmail = await getGmailService();
   const rawMessage = await createMail(options);
   return await gmail.users.messages.send({
     userId: 'me',
@@ -116,10 +118,14 @@ async function sendMail(options) {
 };
 
 export async function sendEmailAlert(message:string, subject:string, email:string) {
-  var options = {
-    to: email,
-    subject: subject,
-    text: message
+  try {
+    var options = {
+      to: email,
+      subject: subject,
+      text: message
+    }
+    await sendMail(options)
+  } catch (e) {
+    console.log("[ERROR][EMAIL] Email failed")
   }
-  await sendMail(options)
 }

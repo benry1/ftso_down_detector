@@ -46,7 +46,7 @@ export class Mongo {
     }
 
     /*
-     *      History Functions
+     *      History Management
      *
      */ 
 
@@ -111,5 +111,13 @@ export class Mongo {
             console.error("[MONGODB] Failed to clean history:", e)
         }
     }
+
+    /*
+     *      Add And Modify Settings
+     *
+     * 
+     */
+
+    
 
 }

@@ -6,7 +6,7 @@ const twilioClient = new twilio(process.env.twilioAccount, process.env.twilioTok
 export async function sendTextAlert(message: string, phone:string) {
 	var result = await twilioClient.messages
           .create({
-	            body: "[" + process.env.env + "]" + message,
+	            body: "[" + process.env.network + "]" + message,
 	            to: phone,
 	            from: process.env.twilioNumber,
    			});

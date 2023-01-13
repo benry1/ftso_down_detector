@@ -14,6 +14,9 @@ Set up for a mongo database with 4 collections:
 3. nodeSettings - where you register an RPC to be tracked
 4. nodeHistory - health history
 
+Run 'npm install' with node v16 or above. \
+Start the app with something like: `npx ts-node detective/main.ts`
+
 ### providerSettings schema
 >{
 >   "address": "0xd9200cc419bde28b169ad8c904d2687a15a4bf9f",  //Address to monitor

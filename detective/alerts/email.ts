@@ -1,3 +1,9 @@
+/*
+*
+*   Alas - none of this is working. Good luck.
+*
+*/
+
 require('dotenv').config();
 
 const {authenticate} = require('@google-cloud/local-auth');

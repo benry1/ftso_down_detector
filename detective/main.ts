@@ -78,22 +78,35 @@ async function initialize() {
     console.log("Wathing Nodes", watchNodes.map(settings => settings.ip))
     //Creating a listener on two RPCs for parity
     //If at least one sees the submit, it went through
-    var priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc1);
-    var priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc2);
+    var priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc1);
+    var priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
 
     console.log("Listening for submits and reveals...")
-    priceSubmitterContract1.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted)
-    priceSubmitterContract2.on(priceSubmitterContract2.filters.PriceHashesSubmitted(), handleHashSubmitted)
-    priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed)
-    priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed)
+    if (process.env.env == "SONGBIRD") {
+        priceSubmitterContract1.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
+        priceSubmitterContract2.on(priceSubmitterContract2.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
+        priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_songbird)
+        priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed_songbird)
+    } else if (process.env.env == "FLARE") {
+        priceSubmitterContract1.on(priceSubmitterContract1.filters.HashSubmitted(), handleHashSubmitted_flare)
+        priceSubmitterContract2.on(priceSubmitterContract2.filters.HashSubmitted(), handleHashSubmitted_flare)
+        priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_flare)
+        priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed_flare)
+    }
 }
 
-function handleHashSubmitted(submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) {
-    var epochId = _epochId.toNumber()
+function handleHashSubmitted_songbird(submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) {
+    handleHashSubmitted(submitter, _epochId.toNumber(), timestamp.toNumber())
+}
+function handleHashSubmitted_flare(submitter: string, _epochId: ethers.BigNumber, hash: object, timestamp: ethers.BigNumber) {
+    handleHashSubmitted(submitter, _epochId.toNumber(), timestamp.toNumber())
+}
+
+function handleHashSubmitted(submitter: string, epochId: number, timestamp: number) {
     submitter = submitter.toLowerCase()
 
     if (watchAddresses.filter(settings => settings.address == submitter).length > 0) {
-        console.log("Got price hash from ", submitter, epochId, timestamp.toNumber())
+        console.log("Got price hash from ", submitter, epochId, timestamp)
     }
 
     //Update history db with this address for this epoch
@@ -107,26 +120,33 @@ function handleHashSubmitted(submitter: string, _epochId: ethers.BigNumber, ftso
     }
 }
 
-function handlePriceRevealed(submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) {
-    //Set the latest epoch ID, and signal we haven't processed it yet
-    var epochId = _epochId.toNumber();
-    submitter = submitter.toLowerCase()
-    latestSeenEpoch = epochId
-    epochProcessingComplete = false;
-    lastRevealTimestamp = Date.now();
-    if (watchAddresses.filter(settings => settings.address == submitter).length > 0) {
-        console.log("Got a reveal event from ", submitter);
-    }
+function handlePriceRevealed_songbird(submitter: string, _epochId: ethers.BigNumber, ftsos : object, hashes: object[], timestamp: ethers.BigNumber) {
+    handlePriceRevealed(submitter, _epochId.toNumber(), timestamp.toNumber())
+}
+function handlePriceRevealed_flare(submitter: string, _epochId: ethers.BigNumber, ftsos: object[], prices: ethers.BigNumber[], randoms: ethers.BigNumber[], timestamp: ethers.BigNumber) {
+    handlePriceRevealed(submitter, _epochId.toNumber(), timestamp.toNumber())
+}
 
-    //Update history db with this address for this epoch
-    if (revealCache[epochId] == undefined) { 
-        revealCache[epochId] = Array() 
-        console.log("Began getting reveals for ", epochId)
-    }
-    if (!revealCache[epochId].includes(submitter)) {
-        revealCache[epochId].push(submitter)
-        mongo.updateReveals(epochId, submitter)
-    }
+function handlePriceRevealed(submitter: string, epochId: number, timestamp: number) {
+      //Set the latest epoch ID, and signal we haven't processed it yet
+      submitter = submitter.toLowerCase()
+      latestSeenEpoch = epochId
+  
+      epochProcessingComplete = false;
+      lastRevealTimestamp = Date.now();
+      if (watchAddresses.filter(settings => settings.address == submitter).length > 0) {
+          console.log("Got a reveal event from ", submitter);
+      }
+  
+      //Update history db with this address for this epoch
+      if (revealCache[epochId] == undefined) { 
+          revealCache[epochId] = Array() 
+          console.log("Began getting reveals for ", epochId)
+      }
+      if (!revealCache[epochId].includes(submitter)) {
+          revealCache[epochId].push(submitter)
+          mongo.updateReveals(epochId, submitter)
+      }
 }
 
 function sleep(ms:number) {

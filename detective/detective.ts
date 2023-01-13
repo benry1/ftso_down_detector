@@ -119,7 +119,7 @@ async function isEligibleForAlert(settings: NodeSettings, epoch: number) : Promi
 async function alertNodeHealth(settings: NodeSettings, message: string, epoch: number) {
     if (await isEligibleForAlert(settings, epoch)) {
         if (settings.phone != "")    { sendTextAlert(message, settings.phone) }
-        if (settings.email != "")    { sendEmailAlert(message, "Songbird Node Alert", settings.email) }
+        // if (settings.email != "")    { sendEmailAlert(message, "Songbird Node Alert", settings.email) }
     } else {
         
     }
@@ -129,6 +129,6 @@ async function alertNodeHealth(settings: NodeSettings, message: string, epoch: n
 async function alertMissedSubmitsTo(settings: ProviderSettings, missed: number) {
     var message = "Detected " + missed + " missed epochs on address " + settings.address + ". Check your provider at your convenience."
     if (settings.phone != "")    { await sendTextAlert(message, settings.phone) }
-    if (settings.email != "")    { sendEmailAlert(message, "FTSO Provider Alert", settings.email) }
+    // if (settings.email != "")    { sendEmailAlert(message, "FTSO Provider Alert", settings.email) }
     console.log(message)
 }

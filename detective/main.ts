@@ -82,12 +82,12 @@ async function initialize() {
     var priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
 
     console.log("Listening for submits and reveals...")
-    if (process.env.env == "SONGBIRD") {
+    if (process.env.network == "SONGBIRD") {
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_songbird)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed_songbird)
-    } else if (process.env.env == "FLARE") {
+    } else if (process.env.network == "FLARE") {
         priceSubmitterContract1.on(priceSubmitterContract1.filters.HashSubmitted(), handleHashSubmitted_flare)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.HashSubmitted(), handleHashSubmitted_flare)
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_flare)

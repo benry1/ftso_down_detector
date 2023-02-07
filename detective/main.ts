@@ -78,16 +78,20 @@ async function initialize() {
     console.log("Wathing Nodes", watchNodes.map(settings => settings.ip))
     //Creating a listener on two RPCs for parity
     //If at least one sees the submit, it went through
-    var priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc1);
-    var priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
+    var priceSubmitterContract1; = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc1);
+    var priceSubmitterContract2; = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
 
     console.log("Listening for submits and reveals...")
     if (process.env.network == "SONGBIRD") {
+        priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc1);
+        priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi, rpc2);
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.PriceHashesSubmitted(), handleHashSubmitted_songbird)
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_songbird)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.PricesRevealed(), handlePriceRevealed_songbird)
     } else if (process.env.network == "FLARE") {
+        priceSubmitterContract1 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc1);
+        priceSubmitterContract2 = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
         priceSubmitterContract1.on(priceSubmitterContract1.filters.HashSubmitted(), handleHashSubmitted_flare)
         priceSubmitterContract2.on(priceSubmitterContract2.filters.HashSubmitted(), handleHashSubmitted_flare)
         priceSubmitterContract1.on(priceSubmitterContract1.filters.PricesRevealed(), handlePriceRevealed_flare)

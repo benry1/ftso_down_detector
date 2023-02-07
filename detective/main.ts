@@ -78,8 +78,8 @@ async function initialize() {
     console.log("Wathing Nodes", watchNodes.map(settings => settings.ip))
     //Creating a listener on two RPCs for parity
     //If at least one sees the submit, it went through
-    var priceSubmitterContract1; = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc1);
-    var priceSubmitterContract2; = new ethers.Contract(PriceSubmitterAddress, abi.PriceSubmitterAbi_Flare, rpc2);
+    var priceSubmitterContract1;
+    var priceSubmitterContract2;
 
     console.log("Listening for submits and reveals...")
     if (process.env.network == "SONGBIRD") {
